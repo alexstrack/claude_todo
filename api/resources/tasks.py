@@ -1,7 +1,9 @@
-from flask import current_app, g
+from flask import current_app, g, request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 import sqlite3
+import json
+import traceback
 
 from api.schemas.task import TaskSchema, TaskUpdateSchema
 
@@ -37,9 +39,23 @@ class TaskList(MethodView):
                 ' ORDER BY created_at DESC'
             ).fetchall()
             
-            # Convert Row objects to dicts and use schema for serialization
-            return tasks
+            # Convert Row objects to dicts manually to avoid serialization issues
+            task_list = []
+            for task in tasks:
+                task_dict = {
+                    'id': task['id'],
+                    'description': task['description'],
+                    'due_date': task['due_date'],
+                    'status': bool(task['status']),
+                }
+                if task['created_at']:
+                    task_dict['created_at'] = task['created_at']
+                task_list.append(task_dict)
+                
+            return task_list
         except Exception as e:
+            current_app.logger.error(f"Error getting tasks: {str(e)}")
+            current_app.logger.error(traceback.format_exc())
             abort(500, message=str(e))
 
     @blp.arguments(TaskSchema)
@@ -49,10 +65,16 @@ class TaskList(MethodView):
         db = get_db()
         
         try:
+            # Ensure data is properly formatted
+            description = task_data['description']
+            due_date = task_data['due_date']
+            status = task_data.get('status', False)
+            
+            # Insert the task
             cursor = db.execute(
                 'INSERT INTO tasks (description, due_date, status)'
                 ' VALUES (?, ?, ?)',
-                (task_data['description'], task_data['due_date'], task_data.get('status', False))
+                (description, due_date, 1 if status else 0)
             )
             task_id = cursor.lastrowid
             db.commit()
@@ -64,9 +86,21 @@ class TaskList(MethodView):
                 (task_id,)
             ).fetchone()
             
-            return task
+            # Convert to dict for consistent response
+            task_dict = {
+                'id': task['id'],
+                'description': task['description'],
+                'due_date': task['due_date'],
+                'status': bool(task['status']),
+            }
+            if task['created_at']:
+                task_dict['created_at'] = task['created_at']
+                
+            return task_dict
             
-        except sqlite3.Error as e:
+        except Exception as e:
+            current_app.logger.error(f"Error creating task: {str(e)}")
+            current_app.logger.error(traceback.format_exc())
             db.rollback()
             abort(500, message=str(e))
 
@@ -86,9 +120,22 @@ class Task(MethodView):
             
             if task is None:
                 abort(404, message="Task not found")
+            
+            # Convert to dict for consistent response
+            task_dict = {
+                'id': task['id'],
+                'description': task['description'],
+                'due_date': task['due_date'],
+                'status': bool(task['status']),
+            }
+            if task['created_at']:
+                task_dict['created_at'] = task['created_at']
                 
-            return task
+            return task_dict
+                
         except Exception as e:
+            current_app.logger.error(f"Error getting task {task_id}: {str(e)}")
+            current_app.logger.error(traceback.format_exc())
             abort(500, message=str(e))
     
     @blp.arguments(TaskUpdateSchema)
@@ -97,38 +144,38 @@ class Task(MethodView):
         """Update a task"""
         db = get_db()
         
-        # Check if task exists
-        task = db.execute(
-            'SELECT id FROM tasks WHERE id = ?',
-            (task_id,)
-        ).fetchone()
-        
-        if task is None:
-            abort(404, message="Task not found")
-        
-        # Build update query based on provided fields
-        update_fields = []
-        params = []
-        
-        if 'description' in task_data:
-            update_fields.append('description = ?')
-            params.append(task_data['description'])
-            
-        if 'due_date' in task_data:
-            update_fields.append('due_date = ?')
-            params.append(task_data['due_date'])
-            
-        if 'status' in task_data:
-            update_fields.append('status = ?')
-            params.append(task_data['status'])
-            
-        if not update_fields:
-            abort(400, message="No fields to update")
-            
-        query = f"UPDATE tasks SET {', '.join(update_fields)} WHERE id = ?"
-        params.append(task_id)
-        
         try:
+            # Check if task exists
+            task = db.execute(
+                'SELECT id FROM tasks WHERE id = ?',
+                (task_id,)
+            ).fetchone()
+            
+            if task is None:
+                abort(404, message="Task not found")
+            
+            # Build update query based on provided fields
+            update_fields = []
+            params = []
+            
+            if 'description' in task_data and task_data['description'] is not None:
+                update_fields.append('description = ?')
+                params.append(task_data['description'])
+                
+            if 'due_date' in task_data and task_data['due_date'] is not None:
+                update_fields.append('due_date = ?')
+                params.append(task_data['due_date'])
+                
+            if 'status' in task_data:
+                update_fields.append('status = ?')
+                params.append(1 if task_data['status'] else 0)  # Convert to 0 or 1 for SQLite
+                
+            if not update_fields:
+                abort(400, message="No fields to update")
+                
+            query = f"UPDATE tasks SET {', '.join(update_fields)} WHERE id = ?"
+            params.append(task_id)
+            
             db.execute(query, params)
             db.commit()
             
@@ -139,9 +186,21 @@ class Task(MethodView):
                 (task_id,)
             ).fetchone()
             
-            return updated_task
+            # Convert to dict for consistent response
+            task_dict = {
+                'id': updated_task['id'],
+                'description': updated_task['description'],
+                'due_date': updated_task['due_date'],
+                'status': bool(updated_task['status']),
+            }
+            if updated_task['created_at']:
+                task_dict['created_at'] = updated_task['created_at']
+                
+            return task_dict
             
-        except sqlite3.Error as e:
+        except Exception as e:
+            current_app.logger.error(f"Error updating task {task_id}: {str(e)}")
+            current_app.logger.error(traceback.format_exc())
             db.rollback()
             abort(500, message=str(e))
     
@@ -150,20 +209,22 @@ class Task(MethodView):
         """Delete a task"""
         db = get_db()
         
-        # Check if task exists
-        task = db.execute(
-            'SELECT id FROM tasks WHERE id = ?',
-            (task_id,)
-        ).fetchone()
-        
-        if task is None:
-            abort(404, message="Task not found")
-            
         try:
+            # Check if task exists
+            task = db.execute(
+                'SELECT id FROM tasks WHERE id = ?',
+                (task_id,)
+            ).fetchone()
+            
+            if task is None:
+                abort(404, message="Task not found")
+                
             db.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
             db.commit()
             return {}
-            
-        except sqlite3.Error as e:
+                
+        except Exception as e:
+            current_app.logger.error(f"Error deleting task {task_id}: {str(e)}")
+            current_app.logger.error(traceback.format_exc())
             db.rollback()
             abort(500, message=str(e))

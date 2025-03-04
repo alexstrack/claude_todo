@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate, pre_dump
+from marshmallow import Schema, fields, validate, pre_dump, post_load
 from datetime import datetime
 
 
@@ -11,14 +11,29 @@ class TaskSchema(Schema):
     
     @pre_dump
     def prepare_data(self, data, **kwargs):
-        # If data is a dict-like object (like sqlite3.Row), convert to dict
+        # Convert sqlite3.Row to dict
         if hasattr(data, 'keys'):
             data = dict(data)
+        
+        # Ensure we have a proper dict
+        data_dict = {}
+        for key in ['id', 'description', 'due_date', 'status', 'created_at']:
+            if key in data:
+                data_dict[key] = data[key]
+        
+        # Convert status to boolean
+        if 'status' in data_dict:
+            data_dict['status'] = bool(data_dict['status'])
             
-        # Format the status to ensure it's a boolean
-        if 'status' in data and not isinstance(data['status'], bool):
-            data['status'] = bool(data['status'])
-            
+        return data_dict
+        
+    @post_load
+    def format_dates(self, data, **kwargs):
+        # Ensure dates are in the format SQLite expects
+        if 'due_date' in data and data['due_date']:
+            # Ensure the date is in YYYY-MM-DD format
+            if isinstance(data['due_date'], datetime):
+                data['due_date'] = data['due_date'].strftime('%Y-%m-%d')
         return data
 
 
