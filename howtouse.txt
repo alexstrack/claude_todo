@@ -1,0 +1,41 @@
+# Claude Todo User Guide
+
+## Getting Started
+1. Start the application by running `flask run` from the command line
+2. Open your web browser and navigate to http://127.0.0.1:5000
+3. You will see the main interface with a form to add new tasks
+
+## Adding Tasks
+1. In the form at the top of the page, enter a description for your task
+2. Select a due date from the calendar
+3. Click "Add Task" to create the new task
+4. Your task will appear in the list below
+
+## Managing Tasks
+### Marking Tasks as Complete
+1. To mark a task as complete, click the "Mark as Complete" button
+2. The task will be displayed with a strikethrough to indicate completion
+3. To mark a completed task as incomplete again, click "Mark as Incomplete"
+
+### Deleting Tasks
+1. To remove a task, click the "Delete" button
+2. You will be asked to confirm the deletion
+3. Click "OK" to permanently remove the task, or "Cancel" to keep it
+
+## Viewing Tasks
+- Tasks are displayed in order of due date (earliest first)
+- Completed tasks show with strikethrough text
+- Overdue tasks have their due date highlighted in yellow
+- Each page shows up to 10 tasks
+
+## Navigating Between Pages
+When you have more than 10 tasks:
+1. Page numbers appear at the bottom of the task list
+2. Click on a page number to view that page of tasks
+3. Use "Previous" and "Next" buttons to move between pages
+
+## Tips
+- Always set realistic due dates for your tasks
+- Mark tasks as complete as soon as you finish them
+- Delete tasks you no longer need to keep your list organized
+- Check the app regularly to avoid missing deadlines

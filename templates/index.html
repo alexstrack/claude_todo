@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Todo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Claude Todo</h1>
+        
+        <!-- Task Form -->
+        <form id="task-form" class="task-form" action="{{ url_for('add_task') }}" method="post">
+            <div class="form-group">
+                <div style="flex: 2;">
+                    <label for="description">Task Description</label>
+                    <input type="text" id="description" name="description" placeholder="Enter task description..." required>
+                </div>
+                <div style="flex: 1;">
+                    <label for="due-date">Due Date</label>
+                    <input type="date" id="due-date" name="due_date" required>
+                </div>
+            </div>
+            <button type="submit">Add Task</button>
+        </form>
+        
+        <!-- Task List -->
+        <ul class="tasks">
+            {% for task in tasks %}
+            <li class="task-item {% if task.status %}completed{% elif task.due_date|is_overdue(task.status) %}overdue{% endif %}">
+                <div class="task-content">
+                    <div class="task-description">{{ task.description }}</div>
+                    <div class="task-date">Due: {{ task.due_date|format_date }}</div>
+                </div>
+                <div class="task-actions">
+                    <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="post">
+                        <button type="submit" class="toggle">
+                            {% if task.status %}Mark as Incomplete{% else %}Mark as Complete{% endif %}
+                        </button>
+                    </form>
+                    <form action="{{ url_for('delete_task', task_id=task.id) }}" method="post">
+                        <button type="submit" class="delete delete-task">Delete</button>
+                    </form>
+                </div>
+            </li>
+            {% else %}
+            <li class="task-item">
+                <div class="task-content">
+                    <div class="task-description">No tasks yet. Add one above!</div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="{{ url_for('index', page=page-1) }}">Previous</a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <span class="current">{{ p }}</span>
+            {% else %}
+            <a href="{{ url_for('index', page=p) }}">{{ p }}</a>
+            {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+            <a href="{{ url_for('index', page=page+1) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

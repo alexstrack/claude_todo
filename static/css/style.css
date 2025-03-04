@@ -1,0 +1,178 @@
+/* Main Theme Colors from README */
+:root {
+    --bg-color: #1e1e2e;
+    --text-color: #cdd6f4;
+    --accent-color: #89b4fa;
+    --success-color: #a6e3a1;
+    --warning-color: #f9e2af;
+    --error-color: #f38ba8;
+    --bg-secondary: #313244;
+    --text-muted: #9399b2;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: var(--accent-color);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Form styling */
+.task-form {
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+input[type="text"],
+input[type="date"] {
+    background-color: var(--bg-color);
+    border: 1px solid var(--bg-secondary);
+    padding: 10px;
+    border-radius: 4px;
+    color: var(--text-color);
+    font-size: 16px;
+    width: 100%;
+}
+
+button {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #a5c8ff;
+}
+
+button.delete {
+    background-color: var(--error-color);
+}
+
+button.toggle {
+    background-color: var(--success-color);
+}
+
+/* Task list styling */
+.tasks {
+    list-style: none;
+    padding: 0;
+}
+
+.task-item {
+    background-color: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-content {
+    flex-grow: 1;
+}
+
+.task-description {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.task-date {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.task-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Status styling */
+.completed .task-description {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.overdue .task-date {
+    color: var(--warning-color);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 10px;
+}
+
+.pagination a {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+    padding: 8px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.pagination a:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+}
+
+.pagination .current {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .task-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .task-actions {
+        margin-top: 15px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .form-group {
+        flex-direction: column;
+    }
+}
