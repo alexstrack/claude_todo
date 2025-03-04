@@ -19,6 +19,13 @@ app.config.from_mapping(
     OPENAPI_SWAGGER_UI_URL="https://cdn.jsdelivr.net/npm/swagger-ui-dist/",
 )
 
+# Enable detailed logging
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+)
+
 # Ensure the instance folder exists
 try:
     os.makedirs(app.instance_path)
