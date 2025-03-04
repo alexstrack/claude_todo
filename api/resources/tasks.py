@@ -29,16 +29,18 @@ class TaskList(MethodView):
     @blp.response(200, TaskSchema(many=True))
     def get(self):
         """Get all tasks"""
-        db = get_db()
-        tasks = db.execute(
-            'SELECT id, description, due_date, status, created_at'
-            ' FROM tasks'
-            ' ORDER BY created_at DESC'
-        ).fetchall()
-        
-        # Convert Row objects to dicts
-        tasks_list = [dict(task) for task in tasks]
-        return tasks_list
+        try:
+            db = get_db()
+            tasks = db.execute(
+                'SELECT id, description, due_date, status, created_at'
+                ' FROM tasks'
+                ' ORDER BY created_at DESC'
+            ).fetchall()
+            
+            # Convert Row objects to dicts and use schema for serialization
+            return tasks
+        except Exception as e:
+            abort(500, message=str(e))
 
     @blp.arguments(TaskSchema)
     @blp.response(201, TaskSchema)
@@ -62,7 +64,7 @@ class TaskList(MethodView):
                 (task_id,)
             ).fetchone()
             
-            return dict(task)
+            return task
             
         except sqlite3.Error as e:
             db.rollback()
@@ -74,17 +76,20 @@ class Task(MethodView):
     @blp.response(200, TaskSchema)
     def get(self, task_id):
         """Get a task by ID"""
-        db = get_db()
-        task = db.execute(
-            'SELECT id, description, due_date, status, created_at'
-            ' FROM tasks WHERE id = ?',
-            (task_id,)
-        ).fetchone()
-        
-        if task is None:
-            abort(404, message="Task not found")
+        try:
+            db = get_db()
+            task = db.execute(
+                'SELECT id, description, due_date, status, created_at'
+                ' FROM tasks WHERE id = ?',
+                (task_id,)
+            ).fetchone()
             
-        return dict(task)
+            if task is None:
+                abort(404, message="Task not found")
+                
+            return task
+        except Exception as e:
+            abort(500, message=str(e))
     
     @blp.arguments(TaskUpdateSchema)
     @blp.response(200, TaskSchema)
@@ -134,7 +139,7 @@ class Task(MethodView):
                 (task_id,)
             ).fetchone()
             
-            return dict(updated_task)
+            return updated_task
             
         except sqlite3.Error as e:
             db.rollback()
