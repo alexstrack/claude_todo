@@ -4,12 +4,26 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, g, jsonify, abort
 from flask.cli import with_appcontext
 import click
+from api import init_api
 
 
 app = Flask(__name__)
 app.config.from_mapping(
     SECRET_KEY='dev',
     DATABASE=os.path.join(app.instance_path, 'mytasks.db'),
+    API_TITLE="Tasks API",
+    API_VERSION="v1",
+    OPENAPI_VERSION="3.0.2",
+    OPENAPI_URL_PREFIX="/",
+    OPENAPI_SWAGGER_UI_PATH="/swagger-ui",
+    OPENAPI_SWAGGER_UI_URL="https://cdn.jsdelivr.net/npm/swagger-ui-dist/",
+)
+
+# Enable detailed logging
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
 )
 
 # Ensure the instance folder exists
@@ -63,6 +77,9 @@ def init_app(app):
 # Set up CLI commands
 init_app(app)
 
+# Initialize the API
+init_api(app)
+
 
 @app.route('/')
 def index():
@@ -83,9 +100,9 @@ def index():
         (per_page, offset)
     ).fetchall()
     
-    return render_template('index.html', 
-                           tasks=tasks, 
-                           page=page, 
+    return render_template('index.html',
+                           tasks=tasks,
+                           page=page,
                            total_pages=total_pages)
 
 
